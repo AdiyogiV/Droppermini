@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini Dropbox</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 900px;
+      margin: 50px auto;
+    }
+    .file-list {
+      margin-top: 40px;
+    }
+    .table {
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-center mb-4">Mini Dropbox</h1>
+
+    <div class="upload-area mb-4">
+      <form action="/upload" method="post" enctype="multipart/form-data" id="upload-form" class="d-flex justify-content-center">
+        <div class="input-group w-50">
+          <div class="custom-file">
+            <input type="file" class="custom-file-input" name="file" id="file" required>
+            <label class="custom-file-label" for="file">Choose file</label>
+          </div>
+          <div class="input-group-append">
+            <button type="submit" class="btn btn-primary">Upload</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="file-list">
+      <table class="table table-striped">
+        <thead class="thead-dark">
+          <tr>
+            <th>File Name</th>
+            <th>Size</th>
+            <th>Uploaded At</th>
+          </tr>
+        </thead>
+        <tbody id="file-list">
+          <!-- File list will be dynamically added here using JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function updateFileList() {
+      fetch('/files')
+        .then(response => response.json())
+        .then(files => {
+          const fileList = document.getElementById('file-list');
+          fileList.innerHTML = files.map(file => `
+            <tr>
+              <td>${file.name}</td>
+              <td>${file.size}</td>
+              <td>${file.timestamp}</td>
+            </tr>
+          `).join('');
+        });
+    }
+
+    updateFileList();
+
+    const uploadForm = document.getElementById('upload-form');
+    uploadForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(uploadForm);
+      fetch('/upload', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        updateFileList();
+        uploadForm.reset();
+      })
+      .catch(error => console.error('Error:', error));
+    });
+
+    const fileInput = document.getElementById('file');
+    fileInput.addEventListener('change', () => {
+      const fileName = fileInput.value.split('\\').pop();
+      fileInput.nextElementSibling.textContent = fileName;
+    });
+  </script>
+</body>
+</html>
